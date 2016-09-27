@@ -41,12 +41,13 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
     }
   }
 
+  // TODO: Make these functions
   const rectangleToCoordinate = (x, y) => {
 
   }
 
   const coordinateToRectangle = (x, y) => {
-    
+
   }
 
   const drawLine = (x1, y1, x2, y2) => {
@@ -90,21 +91,55 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
     }
   })();
 
-  const toggleRectangle = (x, y) => {
 
-    let color;
-    grid[x][y] = !grid[x][y];
+  const changeRectangle = newState => {
 
-    if (grid[x][y]) {
-      color = rectangleActiveColor;
-    } else {
-      color = rectangleInactiveColor;
+    const color = newState ? rectangleActiveColor : rectangleInactiveColor;
+
+    return (x, y) => {
+      grid[x][y] = newState;
+      const xcoord = x * rectangleWidth + x * gridThickness + gridThickness / 2;
+      const ycoord = y * rectangleHeight + y * gridThickness + gridThickness / 2;
+      drawRectangle(xcoord, ycoord, color);
     }
-
-    drawRectangle()
 
   }
 
+  const activateRectangle = changeRectangle(true);
+  const deactivateRectangle = changeRectangle(false);
+
+  const toggleRectangle = (x, y) => {
+
+    if (grid[x][y]) {
+      deactivateRectangle(x, y);
+    } else {
+      activateRectangle(x, y);
+    }
+
+  }
+
+  let leftButtonDown = false;
+  let rightButtonDown = false;
+
+  document.addEventListener('mousedown', evt => {
+
+    if (evt.button == 0) {
+      console.log('left down');
+    } else if (evt.button == 1) {
+      comnsole.log('right down');
+    }
+
+  });
+
+  document.addEventListener('mouseup', evt => {
+
+    if (evt.button == 0) {
+      console.log('left up');
+    } else if (evt.button == 1) {
+      comnsole.log('right up');
+    }
+
+  });
 
   // When a rectangle is clicked, toggle its state (active or not active)
   canvas.addEventListener('click', evt => {
@@ -119,8 +154,21 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
 
     toggleRectangle(rx, ry);
 
-    //console.log(`Clicked at: ${x}, ${y}`);
-    //console.log(`Clicked rectangle: ${rx}, ${ry}`);
+  });
+
+  canvas.addEventListener('mousemove', (evt) => {
+    const rect = canvas.getBoundingClientRect();
+
+    const x = evt.clientX - rect.left;
+    const y = evt.clientY - rect.top;
+    const rx = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
+    const ry = Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
+
+    if (evt.button == 0 && !grid[rx][ry]) {
+      activateRectangle(rx, ry);
+    } else if (evt.button == 1 && grid[rx][ry]) {
+      deactivateRectangle(rx, ry);
+    }
 
   });
 
