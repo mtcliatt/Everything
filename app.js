@@ -22,6 +22,8 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
 
+  canvas.oncontextmenu = e => e.preventDefault();
+
   // .9 and .4 were chosen so the grid wasn't too stretched out
   canvas.width = .95 * window.innerWidth;
   canvas.height = .3 * window.innerHeight;
@@ -97,9 +99,10 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
     const color = newState ? rectangleActiveColor : rectangleInactiveColor;
 
     return (x, y) => {
-      grid[x][y] = newState;
       const xcoord = x * rectangleWidth + x * gridThickness + gridThickness / 2;
       const ycoord = y * rectangleHeight + y * gridThickness + gridThickness / 2;
+
+      grid[x][y] = newState;
       drawRectangle(xcoord, ycoord, color);
     }
 
@@ -122,23 +125,19 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
   let rightButtonDown = false;
 
   document.addEventListener('mousedown', evt => {
-
     if (evt.button == 0) {
-      console.log('left down');
-    } else if (evt.button == 1) {
-      comnsole.log('right down');
+      leftButtonDown = true;
+    } else if (evt.button == 2) {
+      rightButtonDown = true;
     }
-
   });
 
   document.addEventListener('mouseup', evt => {
-
     if (evt.button == 0) {
-      console.log('left up');
-    } else if (evt.button == 1) {
-      comnsole.log('right up');
+      leftButtonDown = false;
+    } else if (evt.button == 2) {
+      rightButtonDown = false;
     }
-
   });
 
   // When a rectangle is clicked, toggle its state (active or not active)
@@ -164,12 +163,11 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
     const rx = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
     const ry = Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
 
-    if (evt.button == 0 && !grid[rx][ry]) {
+    if (leftButtonDown && !grid[rx][ry]) {
       activateRectangle(rx, ry);
-    } else if (evt.button == 1 && grid[rx][ry]) {
+    } else if (rightButtonDown && grid[rx][ry]) {
       deactivateRectangle(rx, ry);
     }
-
   });
 
 })();
