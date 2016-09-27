@@ -36,9 +36,9 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
   const grid = [];
 
   // Initialize the grid with all false values, i.e. the inactive state
-  for (let i = 0; i < 106; i++) {
+  for (let i = 0; i < numRectanglesWide; i++) {
     grid.push([]);
-    for (let j = 0; j < 17; j++) {
+    for (let j = 0; j < numRectanglesHigh; j++) {
       grid[i].push(false);
     }
   }
@@ -168,6 +168,86 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
     } else if (rightButtonDown && grid[rx][ry]) {
       deactivateRectangle(rx, ry);
     }
+  });
+
+  const plotBinary = string => {
+
+    console.log('about to plot: ' + string);
+
+    for (let i = 0; i < numRectanglesWide; i++) {
+      for (let j = 0; j < numRectanglesHigh; j++) {
+        deactivateRectangle(i, j);
+      }
+    }
+
+    let column = 0;
+    let row = 0;
+
+    for (let i = string.length - 1; i >= 0; i--) {
+      let digit = string.charAt(i);
+      //console.log('Digit #' + i + ' is ' + digit);
+      //console.log('At row ' + row + ', column ' + column);
+
+      if (digit === '1') {
+        activateRectangle(105 - column, row);
+      }
+
+      row++;
+      if (row % 17 == 0) {
+        row = 0;
+        column++;
+      }
+    }
+
+    console.log('done');
+
+  };
+
+  const readInputButton = document.getElementById('readInputButton');
+  const getOutputButton = document.getElementById('getOutputButton');
+  const outputTextarea = document.getElementById('outputArea');
+  const inputTextarea = document.getElementById('inputArea');
+
+  outputTextarea.innerHTML = '';
+  inputTextarea.innerHTML = '';
+
+  const sn = SchemeNumber;
+  const fn = sn.fn;
+  const ns = fn['number->string'];
+  const multiply = fn['*'];
+  const divide = fn['/'];
+
+  getOutputButton.addEventListener('click', () => {
+    let plotString = '#b';
+
+    for (let i = 0; i < numRectanglesWide; i++) {
+      for (let j = numRectanglesHigh - 1; j >= 0; j--) {
+        plotString += grid[i][j] ? '1' : '0';
+      }
+    }
+
+    plotString = multiply(plotString, sn('17'));
+    outputTextarea.value = ns(plotString);
+  });
+
+  readInputButton.addEventListener('click', () => {
+    let inputNumber = fn['string->number'](inputTextarea.value);
+    let remainder = fn['mod'](inputNumber, sn('17'));
+
+    if (!fn['='](remainder, sn('0'))) {
+      console.log('Not divisible by 17!');
+      return;
+    }
+
+    inputNumber = divide(inputNumber, sn('17'));
+
+    let binaryNumber = ns(inputNumber, sn('2'));
+
+    //console.log(ns(inputNumber));
+    //console.log(ns(binaryNumber));
+
+    plotBinary(binaryNumber);
+
   });
 
 })();

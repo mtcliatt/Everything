@@ -10,15 +10,45 @@
       left: 50px;
       background-color: grey;
     }
+
     body {
       background-color: black;
+    }
+
+    #outputArea {
+
+    }
+
+    #inputArea {
+      disabled: true;
     }
   </style>
 
 </head>
 <body>
+
   <canvas id="canvas"></canvas>
 
+  <br><br>
+  <br><br>
+  <br><br>
+  <br><br>
+
+  <center>
+    <button id="getOutputButton">Generate number from plot</button>
+    <br>
+    <textarea readonly id="outputArea" rows="5" cols="100"></textarea>
+
+    <br><br>
+    <br><br>
+
+    <button id="readInputButton">Generate plot from number</button>
+    <br>
+    <textarea id="inputArea" rows="5" cols="100"></textarea>
+  </center>
+
+  <script src="./biginteger.js"></script>
+  <script src="./schemeNumber.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
