@@ -12,66 +12,132 @@ const rectangleInactiveColor = 'black';
 const numRectanglesWide = 106;
 const numRectanglesHigh = 17;
 
-// The total size of the grid lines
-const verticalLineSize = numRectanglesWide * gridThickness;
-const horizontalLineSize = numRectanglesHigh * gridThickness;
 
 (() => {
 
-  // Find the canvas, use the 2d context to draw on it
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+  // The canvas DOM element and the context to use for drawing
+  let canvas;
+  let ctx;
+  setupCanvas();
 
-  canvas.oncontextmenu = e => e.preventDefault();
+  // The total size of the grid lines
+  const totalVerticalLineSize = numRectanglesWide * gridThickness;
+  const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
 
-  // .9 and .4 were chosen so the grid wasn't too stretched out
-  canvas.width = .95 * window.innerWidth;
-  canvas.height = .3 * window.innerHeight;
+  // The room for the rectangles is what is left over after the lines are drawn
+  const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
+  const rectangleHeight = (canvas.height - totalHorizontalLineSize) / numRectanglesHigh;
 
-  // The room left for the rectangles is the canvas size excluding the room
-  // needed to draw the grid lines.
-  const rectangleWidth = (canvas.width - verticalLineSize) / numRectanglesWide;
-  const rectangleHeight = (canvas.height - horizontalLineSize) / numRectanglesHigh;
-
-  const grid = [];
-
-  // Initialize the grid with all false values, i.e. the inactive state
-  for (let i = 0; i < numRectanglesWide; i++) {
-    grid.push([]);
-    for (let j = 0; j < numRectanglesHigh; j++) {
-      grid[i].push(false);
-    }
+  const drawRectangle = (x, y, color) => {
+    //console.log(`about to draw on ${x}, ${y}`)
+    ctx.clearRect(x, y, rectangleWidth, rectangleHeight);
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, rectangleWidth, rectangleHeight);
   }
 
-  // TODO: Make these functions
-  const rectangleToCoordinate = (x, y) => {
+  const clampValueBetween = (value, min, max) => {
+    return Math.min(Math.max(value, min), max);
+  }
 
+  const rectangleToCoordinate = (x, y) => {
+    const maxy = numRectanglesHigh * rectangleHeight + numRectanglesHigh * gridThickness;
+    const xcoord = x * rectangleWidth + x * gridThickness + gridThickness / 2;
+    const ycoord =  maxy - ((y + 1) * rectangleHeight + y * gridThickness + gridThickness / 2);
+
+    return {
+      xcoord,
+      ycoord
+    };
   }
 
   const coordinateToRectangle = (x, y) => {
+    let rectangleColumn = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
+    let rectangleRow = 16 - Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
+
+    rectangleColumn = clampValueBetween(rectangleColumn, 0, numRectanglesWide - 1);
+    rectangleRow = clampValueBetween(rectangleRow, 0, numRectanglesHigh - 1);
+
+    //console.log(`c2r found (column, row) = (${rectangleColumn}, ${rectangleRow})`);
+
+    return {
+      x: rectangleColumn,
+      y: rectangleRow
+    };
+  }
+
+  // A closure to generate the activating and deactivating functions
+  const setRectangleState = newState => {
+    const color = newState ? rectangleActiveColor : rectangleInactiveColor;
+
+    return (x, y) => {
+      const {xcoord, ycoord} = rectangleToCoordinate(x, y);
+      grid[x][y] = newState;
+      drawRectangle(xcoord, ycoord, color);
+    }
+  }
+
+  const activateRectangle = setRectangleState(true);
+  const deactivateRectangle = setRectangleState(false);
+
+  const toggleRectangle = (x, y) => {
+    if (grid[x][y]) {
+      deactivateRectangle(x, y);
+    } else {
+      activateRectangle(x, y);
+    }
+  }
+
+  const clearGrid = () => {
+    for (let i = 0; i < numRectanglesWide; i++) {
+      for (let j = 0; j < numRectanglesHigh; j++) {
+        deactivateRectangle(i, j);
+      }
+    }
+  }
+
+  // This array will hold the states of each 'cell'
+  let grid;
+  setupGrid();
+  clearGrid();
+
+  // Finds the canvas DOM element and uses the 2d context to draw on it
+  function setupCanvas() {
+    canvas = document.getElementById('canvas');
+
+    if (!canvas.getContext) {
+      console.log('This browser does not support the canvas element.');
+      return;
+    }
+
+    ctx = canvas.getContext('2d');
+
+    canvas.width = .95 * window.innerWidth;
+    canvas.height = .3 * window.innerHeight;
+    canvas.oncontextmenu = e => e.preventDefault();
 
   }
 
-  const drawLine = (x1, y1, x2, y2) => {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  };
+  // Creates the array to hold the "cell's" states and draws the grid's lines
+  function setupGrid() {
+    grid = [];
 
-  const drawRectangle = (x, y, color) => {
-    ctx.clearRect(x, y, rectangleWidth, rectangleHeight);
+    // Initialize the grid with all false values, i.e. the inactive state
+    for (let i = 0; i < numRectanglesWide; i++) {
+      grid.push([]);
+      for (let j = 0; j < numRectanglesHigh; j++) {
+        grid[i].push(false);
+      }
+    }
 
-    const rectangle = new Path2D();
-    rectangle.rect(x, y, rectangleWidth, rectangleHeight);
-    ctx.fillStyle = color;
-    ctx.fill(rectangle);
-  }
-
-  const drawGrid = (() => {
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = gridThickness;
 
+    const drawLine = (x1, y1, x2, y2) => {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
     // Since we draw the lines on the left and top sides of each rectangle,
     // we need to use <= instead of < so that the last border is drawn
     for (let i = 0; i <= numRectanglesWide; i++) {
@@ -83,171 +149,125 @@ const horizontalLineSize = numRectanglesHigh * gridThickness;
       const y = i * rectangleHeight + i * gridThickness;
       drawLine(0, y, canvas.width, y);
     }
-
-    for (let i = 0; i < numRectanglesWide; i++) {
-      for (let j = 0; j < numRectanglesHigh; j++) {
-        const x = i * rectangleWidth + i * gridThickness + 1;
-        const y = j * rectangleHeight + j * gridThickness + 1;
-        drawRectangle(x, y, rectangleInactiveColor);
-      }
-    }
-  })();
-
-
-  const changeRectangle = newState => {
-
-    const color = newState ? rectangleActiveColor : rectangleInactiveColor;
-
-    return (x, y) => {
-      const xcoord = x * rectangleWidth + x * gridThickness + gridThickness / 2;
-      const ycoord = y * rectangleHeight + y * gridThickness + gridThickness / 2;
-
-      grid[x][y] = newState;
-      drawRectangle(xcoord, ycoord, color);
-    }
-
   }
 
-  const activateRectangle = changeRectangle(true);
-  const deactivateRectangle = changeRectangle(false);
+  setupIO();
 
-  const toggleRectangle = (x, y) => {
+  function setupIO() {
+    let leftButtonDown = false;
+    let rightButtonDown = false;
 
-    if (grid[x][y]) {
-      deactivateRectangle(x, y);
-    } else {
-      activateRectangle(x, y);
+    document.addEventListener('mousedown', evt => {
+      if (evt.button === 0) {
+        leftButtonDown = true;
+      } else if (evt.button === 2) {
+        rightButtonDown = true;
+      }
+    });
+
+    document.addEventListener('mouseup', evt => {
+      if (evt.button === 0) {
+        leftButtonDown = false;
+      } else if (evt.button === 2) {
+        rightButtonDown = false;
+      }
+    });
+
+    const getMouseCoordinate = evt => {
+      const canvasRectangle = canvas.getBoundingClientRect();
+
+      return {
+        x: evt.clientX - canvasRectangle.left,
+        y: evt.clientY - canvasRectangle.top
+      };
     }
 
+    const handleMouseAction = (evt, isClick = false)  => {
+      const {x: mousex, y: mousey} = getMouseCoordinate(evt);
+      const {x: rectx, y: recty} = coordinateToRectangle(mousex, mousey);
+
+      if (rectx < 0 || recty < 0 ||
+          rectx > numRectanglesWide || recty > numRectanglesHigh) {
+            return;
+      }
+
+      if (leftButtonDown) {
+        activateRectangle(rectx, recty);
+      } else if (rightButtonDown) {
+        deactivateRectangle(rectx, recty);
+      } else if (isClick) {
+        toggleRectangle(rectx, recty);
+      }
+    }
+
+    canvas.addEventListener('mousedown', evt => handleMouseAction(evt, true));
+    canvas.addEventListener('mousemove', handleMouseAction);
+
+    const readInputButton = document.getElementById('readInputButton');
+    const getOutputButton = document.getElementById('getOutputButton');
+    const outputTextarea = document.getElementById('outputArea');
+    const inputTextarea = document.getElementById('inputArea');
+
+    const sn = SchemeNumber;
+    const fn = sn.fn;
+    const ns = fn['number->string'];
+    const multiply = fn['*'];
+    const divide = fn['/'];
+
+    const plotBinary = string => {
+      clearGrid();
+
+      console.log(`Plotting: ${string}`);
+
+      for (let i = 0; i < string.length; i++) {
+        let digit = string.charAt(string.length - i - 1);
+
+        if (digit === '1') {
+
+          const row = i % 17;
+          const column = Math.floor(i / 17);
+
+          console.log(`\tdigit ${i} => (${row}, ${column})`);
+
+          activateRectangle(column, row);
+        }
+      }
+
+    };
+
+    getOutputButton.addEventListener('click', () => {
+      let plotString = '#b';
+
+      for (let i = numRectanglesWide - 1; i >= 0; i--) {
+        for (let j = numRectanglesHigh - 1; j >= 0; j--) {
+          plotString += grid[i][j] ? '1' : '0';
+        }
+      }
+      //console.log(`Binary digits: ${plotString}`);
+
+      plotString = multiply(plotString, sn('17'));
+      outputTextarea.value = ns(plotString);
+    });
+
+    readInputButton.addEventListener('click', () => {
+      let inputNumber = fn['string->number'](inputTextarea.value.trim());
+      let remainder = fn['mod'](inputNumber, sn('17'));
+
+      if (!fn['='](remainder, sn('0'))) {
+        console.log('Not divisible by 17!');
+        return;
+      }
+
+      inputNumber = divide(inputNumber, sn('17'));
+
+      let binaryNumber = ns(inputNumber, sn('2'));
+
+      //console.log(ns(inputNumber));
+      //console.log(ns(binaryNumber));
+
+      plotBinary(binaryNumber);
+
+    });
   }
-
-  let leftButtonDown = false;
-  let rightButtonDown = false;
-
-  document.addEventListener('mousedown', evt => {
-    if (evt.button == 0) {
-      leftButtonDown = true;
-    } else if (evt.button == 2) {
-      rightButtonDown = true;
-    }
-  });
-
-  document.addEventListener('mouseup', evt => {
-    if (evt.button == 0) {
-      leftButtonDown = false;
-    } else if (evt.button == 2) {
-      rightButtonDown = false;
-    }
-  });
-
-  // When a rectangle is clicked, toggle its state (active or not active)
-  canvas.addEventListener('click', evt => {
-
-    // Get the position of the mouse, relative to the top left of the canvas
-    const rect = canvas.getBoundingClientRect();
-    const x = evt.clientX - rect.left;
-    const y = evt.clientY - rect.top;
-
-    const rx = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
-    const ry = Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
-
-    toggleRectangle(rx, ry);
-
-  });
-
-  canvas.addEventListener('mousemove', (evt) => {
-    const rect = canvas.getBoundingClientRect();
-
-    const x = evt.clientX - rect.left;
-    const y = evt.clientY - rect.top;
-    const rx = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
-    const ry = Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
-
-    if (leftButtonDown && !grid[rx][ry]) {
-      activateRectangle(rx, ry);
-    } else if (rightButtonDown && grid[rx][ry]) {
-      deactivateRectangle(rx, ry);
-    }
-  });
-
-  const plotBinary = string => {
-
-    console.log('about to plot: ' + string);
-
-    for (let i = 0; i < numRectanglesWide; i++) {
-      for (let j = 0; j < numRectanglesHigh; j++) {
-        deactivateRectangle(i, j);
-      }
-    }
-
-    let column = 0;
-    let row = 0;
-
-    for (let i = string.length - 1; i >= 0; i--) {
-      let digit = string.charAt(i);
-      //console.log('Digit #' + i + ' is ' + digit);
-      //console.log('At row ' + row + ', column ' + column);
-
-      if (digit === '1') {
-        activateRectangle(105 - column, row);
-      }
-
-      row++;
-      if (row % 17 == 0) {
-        row = 0;
-        column++;
-      }
-    }
-
-    console.log('done');
-
-  };
-
-  const readInputButton = document.getElementById('readInputButton');
-  const getOutputButton = document.getElementById('getOutputButton');
-  const outputTextarea = document.getElementById('outputArea');
-  const inputTextarea = document.getElementById('inputArea');
-
-  outputTextarea.innerHTML = '';
-  inputTextarea.innerHTML = '';
-
-  const sn = SchemeNumber;
-  const fn = sn.fn;
-  const ns = fn['number->string'];
-  const multiply = fn['*'];
-  const divide = fn['/'];
-
-  getOutputButton.addEventListener('click', () => {
-    let plotString = '#b';
-
-    for (let i = 0; i < numRectanglesWide; i++) {
-      for (let j = numRectanglesHigh - 1; j >= 0; j--) {
-        plotString += grid[i][j] ? '1' : '0';
-      }
-    }
-
-    plotString = multiply(plotString, sn('17'));
-    outputTextarea.value = ns(plotString);
-  });
-
-  readInputButton.addEventListener('click', () => {
-    let inputNumber = fn['string->number'](inputTextarea.value);
-    let remainder = fn['mod'](inputNumber, sn('17'));
-
-    if (!fn['='](remainder, sn('0'))) {
-      console.log('Not divisible by 17!');
-      return;
-    }
-
-    inputNumber = divide(inputNumber, sn('17'));
-
-    let binaryNumber = ns(inputNumber, sn('2'));
-
-    //console.log(ns(inputNumber));
-    //console.log(ns(binaryNumber));
-
-    plotBinary(binaryNumber);
-
-  });
 
 })();
