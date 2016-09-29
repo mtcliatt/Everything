@@ -4,6 +4,10 @@
   <meta charset="utf-8"/>
 
   <style>
+    body {
+      background-color: black;
+    }
+
     #canvas {
       position: relative;
       top: 100px;
@@ -11,21 +15,43 @@
       background-color: grey;
     }
 
-    body {
-      background-color: black;
+    #title {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-size: 48px;
+      color: white;
+      margin-bottom: -50px;
     }
 
-    #outputArea {
-
+    #infoText {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-size: 16px;
+      color: white;
     }
 
-    #inputArea {
-      disabled: true;
+    #errorMessage {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-size: 16px;
+      color: red;
+      visibility: hidden;
+    }
+
+    label {
+      font-family: "Lucida Console", Monaco, monospace;
+      font-size: 32px;
+      color: white;
+    }
+
+    label textarea {
+      vertical-align: middle;
     }
   </style>
 
 </head>
 <body>
+
+  <center>
+    <p id="title">Tupper's Self-Referential Formula [<a href="https://en.wikipedia.org/wiki/Tupper%27s_self-referential_formula">wiki</a>]</p>
+  </center>
 
   <canvas id="canvas"></canvas>
 
@@ -35,16 +61,33 @@
   <br><br>
 
   <center>
+
+    <p id="infoText">&#8226;  Click a square to toggle it on and off</p>
+
+    <p id="infoText">&#8226;  Hold down the left/right mouse buttons to turn on/off multiple squares</p>
+
+    <br>
     <button id="getOutputButton">Generate number from plot</button>
     <br>
-    <textarea readonly id="outputArea" rows="5" cols="100"></textarea>
+
+    <label for"outputArea">K-Value:
+      <textarea readonly id="outputArea" rows="8" cols="62"></textarea>
+    </label>
 
     <br><br>
     <br><br>
 
     <button id="readInputButton">Generate plot from number</button>
+    <button id="cleanInputButton">Clean up input</button>
     <br>
-    <textarea id="inputArea" rows="5" cols="100"></textarea>
+
+    <label for"inputArea">K-Value:
+      <textarea id="inputArea" rows="8" cols="64"></textarea>
+    </label>
+    <br>
+
+    <p id="errorMessage">Error:</p>
+    <br><br>
   </center>
 
   <script src="./biginteger.js"></script>

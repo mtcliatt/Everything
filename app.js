@@ -1,56 +1,91 @@
 'use strict';
 
-
 // Color and thickness of the grid's lines
 const gridColor = 'grey';
 const gridThickness = 2;
 
-const rectangleActiveColor = 'white';
+const rectangleActiveColor = 'green';
 const rectangleInactiveColor = 'black';
 
 // The number of rectangles in the grid
 const numRectanglesWide = 106;
 const numRectanglesHigh = 17;
 
+// The total size of the grid lines
+const totalVerticalLineSize = numRectanglesWide * gridThickness;
+const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
 
-(() => {
+(function() {
 
   // The canvas DOM element and the context to use for drawing
   let canvas;
   let ctx;
-  setupCanvas();
 
-  // The total size of the grid lines
-  const totalVerticalLineSize = numRectanglesWide * gridThickness;
-  const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
+  // This array will hold the states of each 'cell'
+  let grid;
+
+  // Before we start, make sure we can access and draw on the canvas
+  checkAndInitCanvas();
 
   // The room for the rectangles is what is left over after the lines are drawn
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
   const rectangleHeight = (canvas.height - totalHorizontalLineSize) / numRectanglesHigh;
 
-  const drawRectangle = (x, y, color) => {
-    //console.log(`about to draw on ${x}, ${y}`)
+  // Draw the grid lines and ..............................
+  setupGrid();
+  clearGrid();
+  setupIO();
+
+  // Helper function that returns value limited to the range of min-max
+  function clampValueBetween(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  // Clears the canvas from (x, y) to (x + rectangleWidth, y + rectangleHeight)
+  // and fills a rectangle there with the specified color
+  function drawRectangle(x, y, color) {
     ctx.clearRect(x, y, rectangleWidth, rectangleHeight);
     ctx.fillStyle = color;
     ctx.fillRect(x, y, rectangleWidth, rectangleHeight);
   }
 
-  const clampValueBetween = (value, min, max) => {
-    return Math.min(Math.max(value, min), max);
+  // Returns coord's of the bottom left corner of the rectangle at (column, row)
+  function rectangleToCoordinate(column, row) {
+
+   /*
+    * Since the canvas element begins its coordinates in the top left corner and we count
+    * rectangles starting from the bottom right, we need to some conversion.
+    * We need 0 to be the max y coord, and the max y coord to be 0.
+    *
+    * In order to convert, we figure out the maximum possible value for the
+    * y coordinate and subtract our y-coordinate value from that.
+    *
+    * We also have to take into account the top and left grid line which takes
+    * up half the space of the normal grid lines.
+    */
+
+    // The max amount of vertical space rectangles and grid lines could take up
+    // -1 because the coordinate of the rectangles begin at their top left
+    const maxRectSpace = (numRectanglesHigh - 1) * rectangleHeight;
+    const maxGridSpace = numRectanglesHigh * gridThickness;
+    const maxy = maxRectSpace + maxGridSpace;
+
+    // The actual amount of space, up to the column specified
+    const rectSpaceHorizontal = column * rectangleWidth;
+    const gridSpaceHorizontal = column * gridThickness + gridThickness / 2;
+
+    // The actual amount of space, up to the row specified
+    const rectSpaceVertical = row * rectangleHeight;
+    const gridSpaceVertical = row * gridThickness + gridThickness / 2;
+
+    const x = rectSpaceHorizontal + gridSpaceHorizontal;
+    const y = maxy - (rectSpaceVertical + gridSpaceVertical);
+
+    return { x, y };
   }
 
-  const rectangleToCoordinate = (x, y) => {
-    const maxy = numRectanglesHigh * rectangleHeight + numRectanglesHigh * gridThickness;
-    const xcoord = x * rectangleWidth + x * gridThickness + gridThickness / 2;
-    const ycoord =  maxy - ((y + 1) * rectangleHeight + y * gridThickness + gridThickness / 2);
-
-    return {
-      xcoord,
-      ycoord
-    };
-  }
-
-  const coordinateToRectangle = (x, y) => {
+  // Returns the column and row of the rectangle intersected by (x, y)
+  function coordinateToRectangle(x, y){
     let rectangleColumn = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
     let rectangleRow = 16 - Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
 
@@ -65,43 +100,22 @@ const numRectanglesHigh = 17;
     };
   }
 
-  // A closure to generate the activating and deactivating functions
-  const setRectangleState = newState => {
+  // Turns on/off the rectangle at the given column and row
+  function setRectangleState(column, row, newState) {
+    grid[column][row] = newState;
+
     const color = newState ? rectangleActiveColor : rectangleInactiveColor;
-
-    return (x, y) => {
-      const {xcoord, ycoord} = rectangleToCoordinate(x, y);
-      grid[x][y] = newState;
-      drawRectangle(xcoord, ycoord, color);
-    }
+    const {x, y} = rectangleToCoordinate(column, row);
+    drawRectangle(x, y, color);
   }
 
-  const activateRectangle = setRectangleState(true);
-  const deactivateRectangle = setRectangleState(false);
-
-  const toggleRectangle = (x, y) => {
-    if (grid[x][y]) {
-      deactivateRectangle(x, y);
-    } else {
-      activateRectangle(x, y);
-    }
+  // Toggles the state of the rectangle at the given column and row
+  function toggleRectangle(column, row) {
+    setRectangleState(column, row, !grid[column][row]);
   }
-
-  const clearGrid = () => {
-    for (let i = 0; i < numRectanglesWide; i++) {
-      for (let j = 0; j < numRectanglesHigh; j++) {
-        deactivateRectangle(i, j);
-      }
-    }
-  }
-
-  // This array will hold the states of each 'cell'
-  let grid;
-  setupGrid();
-  clearGrid();
 
   // Finds the canvas DOM element and uses the 2d context to draw on it
-  function setupCanvas() {
+  function checkAndInitCanvas() {
     canvas = document.getElementById('canvas');
 
     if (!canvas.getContext) {
@@ -138,6 +152,7 @@ const numRectanglesHigh = 17;
       ctx.lineTo(x2, y2);
       ctx.stroke();
     }
+
     // Since we draw the lines on the left and top sides of each rectangle,
     // we need to use <= instead of < so that the last border is drawn
     for (let i = 0; i <= numRectanglesWide; i++) {
@@ -151,26 +166,49 @@ const numRectanglesHigh = 17;
     }
   }
 
-  setupIO();
+  // Turns every rectangle off
+  function clearGrid() {
+    for (let i = 0; i < numRectanglesWide; i++) {
+      for (let j = 0; j < numRectanglesHigh; j++) {
+        setRectangleState(i, j, false);
+      }
+    }
+  }
 
   function setupIO() {
+    const readInputButton = document.getElementById('readInputButton');
+    const getOutputButton = document.getElementById('getOutputButton');
+    const outputTextarea = document.getElementById('outputArea');
+    const inputTextarea = document.getElementById('inputArea');
+    const cleanInputButton = document.getElementById('cleanInputButton')
+    const errorMessage = document.getElementById('errorMessage');
+
     let leftButtonDown = false;
     let rightButtonDown = false;
 
-    document.addEventListener('mousedown', evt => {
-      if (evt.button === 0) {
-        leftButtonDown = true;
-      } else if (evt.button === 2) {
-        rightButtonDown = true;
+    const setButton = (button, isDown) => {
+      if (button === 0) {
+        leftButtonDown = isDown;
+      } else if (button === 2) {
+        rightButtonDown = isDown;
       }
-    });
+    }
 
-    document.addEventListener('mouseup', evt => {
-      if (evt.button === 0) {
-        leftButtonDown = false;
-      } else if (evt.button === 2) {
-        rightButtonDown = false;
-      }
+    document.addEventListener('mousedown', evt => setButton(evt.button, true));
+    document.addEventListener('mouseup', evt => setButton(evt.button, false));
+
+    cleanInputButton.addEventListener('click', () => {
+      let input = inputTextarea.value;
+
+      // Replace any number of whitespace characters with nothing
+      input = input.replace(/\s+/g, '');
+
+      // Replace any number of non-numeric characters with nothing
+      input = input.replace(/\D+/g, '');
+
+      // Insert a newline character after every 64th character
+      input = input.replace(/(.{64})/g, '$1\n');
+      inputTextarea.value = input;
     });
 
     const getMouseCoordinate = evt => {
@@ -192,9 +230,9 @@ const numRectanglesHigh = 17;
       }
 
       if (leftButtonDown) {
-        activateRectangle(rectx, recty);
+        setRectangleState(rectx, recty, true);
       } else if (rightButtonDown) {
-        deactivateRectangle(rectx, recty);
+        setRectangleState(rectx, recty, false);
       } else if (isClick) {
         toggleRectangle(rectx, recty);
       }
@@ -203,32 +241,27 @@ const numRectanglesHigh = 17;
     canvas.addEventListener('mousedown', evt => handleMouseAction(evt, true));
     canvas.addEventListener('mousemove', handleMouseAction);
 
-    const readInputButton = document.getElementById('readInputButton');
-    const getOutputButton = document.getElementById('getOutputButton');
-    const outputTextarea = document.getElementById('outputArea');
-    const inputTextarea = document.getElementById('inputArea');
+    const showError = message => {
+      console.log('showing ' + message);
+      errorMessage.innerHTML = 'Error: ' + message;
+      errorMessage.style.visibility = 'visible';
+    }
+
+    const hideErrorMessage = () => errorMessage.style.visibility = 'hidden';
 
     const sn = SchemeNumber;
     const fn = sn.fn;
     const ns = fn['number->string'];
-    const multiply = fn['*'];
-    const divide = fn['/'];
 
     const plotBinary = string => {
       clearGrid();
-
-      console.log(`Plotting: ${string}`);
 
       for (let i = 0; i < string.length; i++) {
         let digit = string.charAt(string.length - i - 1);
 
         if (digit === '1') {
-
           const row = i % 17;
           const column = Math.floor(i / 17);
-
-          console.log(`\tdigit ${i} => (${row}, ${column})`);
-
           activateRectangle(column, row);
         }
       }
@@ -243,27 +276,28 @@ const numRectanglesHigh = 17;
           plotString += grid[i][j] ? '1' : '0';
         }
       }
-      //console.log(`Binary digits: ${plotString}`);
 
-      plotString = multiply(plotString, sn('17'));
+      plotString = fn['*'](plotString, sn('17'));
       outputTextarea.value = ns(plotString);
     });
 
     readInputButton.addEventListener('click', () => {
-      let inputNumber = fn['string->number'](inputTextarea.value.trim());
+      hideErrorMessage();
+
+      let inputString = inputTextarea.value;
+      inputString = inputString.replace(/\s+/g, '');
+      inputString = inputString.replace(/\D+/g, '');
+
+      let inputNumber = fn['string->number'](inputString);
       let remainder = fn['mod'](inputNumber, sn('17'));
 
       if (!fn['='](remainder, sn('0'))) {
-        console.log('Not divisible by 17!');
+        showError('K is not divisible by 17');
         return;
       }
 
-      inputNumber = divide(inputNumber, sn('17'));
-
+      inputNumber = fn['/'](inputNumber, sn('17'));
       let binaryNumber = ns(inputNumber, sn('2'));
-
-      //console.log(ns(inputNumber));
-      //console.log(ns(binaryNumber));
 
       plotBinary(binaryNumber);
 
