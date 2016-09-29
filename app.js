@@ -1,5 +1,15 @@
 'use strict';
 
+/* TODO:
+
+  - Keep documenting stuff. last left off before coordinateToRectangle()
+
+  - Add ability to press button and copy to clipboard (maybe use clipboard.js)
+
+  - Add other number functionality stuff
+
+*/
+
 // Color and thickness of the grid's lines
 const gridColor = 'grey';
 const gridThickness = 2;
@@ -31,9 +41,14 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
   const rectangleHeight = (canvas.height - totalHorizontalLineSize) / numRectanglesHigh;
 
-  // Draw the grid lines and ..............................
+  // Draw the grid lines and initializes the array holding the state of the grid
   setupGrid();
+
+  // Draws inactive rectangles on the grid
   clearGrid();
+
+  // Sets up IO functions like reading a K value from a textarea, clicking to
+  // turn on/off rectangles, etc
   setupIO();
 
   // Helper function that returns value limited to the range of min-max
@@ -87,7 +102,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   // Returns the column and row of the rectangle intersected by (x, y)
   function coordinateToRectangle(x, y){
     let rectangleColumn = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
-    let rectangleRow = 16 - Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
+    let rectangleRow = (numRectanglesHigh - 1) - Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
 
     rectangleColumn = clampValueBetween(rectangleColumn, 0, numRectanglesWide - 1);
     rectangleRow = clampValueBetween(rectangleRow, 0, numRectanglesHigh - 1);
