@@ -4,7 +4,7 @@
 
   - Keep documenting stuff. last left off before coordinateToRectangle()
 
-  - Add ability to press button and copy to clipboard (maybe use clipboard.js)
+  - Move clipboard stuff to setupIO
 
   - Add other number functionality stuff
 
@@ -14,7 +14,7 @@
 const gridColor = 'grey';
 const gridThickness = 2;
 
-const rectangleActiveColor = 'green';
+const rectangleActiveColor = 'blue';
 const rectangleInactiveColor = 'black';
 
 // The number of rectangles in the grid
@@ -27,35 +27,34 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
 
 (function() {
 
+  // This array will hold the states of each rectangle
+  const grid = [];
+
+  // Instantiates clipboard.js so we can copy text
+  const clipboard = new Clipboard('#copyOutputButton');
+
   // The canvas DOM element and the context to use for drawing
-  let canvas;
-  let ctx;
+  const canvas = document.getElementById('canvas');
 
-  // This array will hold the states of each 'cell'
-  let grid;
+  // If this function exists, the canvas can be used for drawing on
+  if (!canvas.getContext) {
+    console.log('This browser does not support the canvas element.');
+    return;
+  }
 
-  // Before we start, make sure we can access and draw on the canvas
-  checkAndInitCanvas();
+  // The canvas's context used for drawing
+  const ctx = canvas.getContext('2d');
+
+  // The width and height JS will use
+  canvas.width = .9 * window.innerWidth;
+  canvas.height = .3 * window.innerHeight;
 
   // The room for the rectangles is what is left over after the lines are drawn
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
   const rectangleHeight = (canvas.height - totalHorizontalLineSize) / numRectanglesHigh;
 
-  const btn = document.getElementById('copyOutputButton');
-
-  // Instantiates clipboard.js so we can copy text
-  const clipboard = new Clipboard(btn);
-
-  clipboard.on('success', e => {
-    console.log('Action: ' + e.action);
-    console.log('Text: ' + e.text);
-    console.log('Trigger: ' + e.trigger);
-  });
-
-  clipboard.on('error ', e => {
-    console.log('Action: ', e.action);
-    console.log('Trigger: ', e.trigger);
-  });
+  // Prevent the right-click menu from popping up
+  canvas.oncontextmenu = e => e.preventDefault();
 
   // Draw the grid lines and initializes the array holding the state of the grid
   setupGrid();
@@ -146,7 +145,15 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   function setRectangleState(column, row, newState) {
     grid[column][row] = newState;
 
-    const color = newState ? rectangleActiveColor : rectangleInactiveColor;
+    let color;
+
+    if (newState) {
+      color = rectangleActiveColor;
+    }
+    else {
+      color = rectangleInactiveColor;
+    }
+
     const {x, y} = rectangleToCoordinate(column, row);
     drawRectangle(x, y, color);
   }
@@ -156,26 +163,8 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     setRectangleState(column, row, !grid[column][row]);
   }
 
-  // Finds the canvas DOM element and uses the 2d context to draw on it
-  function checkAndInitCanvas() {
-    canvas = document.getElementById('canvas');
-
-    if (!canvas.getContext) {
-      console.log('This browser does not support the canvas element.');
-      return;
-    }
-
-    ctx = canvas.getContext('2d');
-
-    canvas.width = .95 * window.innerWidth;
-    canvas.height = .3 * window.innerHeight;
-    canvas.oncontextmenu = e => e.preventDefault();
-
-  }
-
   // Creates the array to hold the "cell's" states and draws the grid's lines
   function setupGrid() {
-    grid = [];
 
     // Initialize the grid with all false values, i.e. the inactive state
     for (let i = 0; i < numRectanglesWide; i++) {
@@ -193,22 +182,25 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
-    }
+    };
 
     // Since we draw the lines on the left and top sides of each rectangle,
     // we need to use <= instead of < so that the last border is drawn
+
+    // Draws vertical grid lines
     for (let i = 0; i <= numRectanglesWide; i++) {
       const x = i * rectangleWidth + i * gridThickness;
       drawLine(x, 0, x, canvas.height);
     }
 
+    // Draws horizontal grid lines
     for (let i = 0; i <= numRectanglesHigh; i++) {
       const y = i * rectangleHeight + i * gridThickness;
       drawLine(0, y, canvas.width, y);
     }
   }
 
-  // Turns every rectangle off
+  // Calls setRectangleState on every rectangle to set them as inactive
   function clearGrid() {
     for (let i = 0; i < numRectanglesWide; i++) {
       for (let j = 0; j < numRectanglesHigh; j++) {
@@ -217,12 +209,14 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     }
   }
 
+  // Sets up IO functions like reading a K value from a textarea, clicking to
+  // turn on/off rectangles, etc
   function setupIO() {
     const readInputButton = document.getElementById('readInputButton');
     const getOutputButton = document.getElementById('getOutputButton');
     const outputTextarea = document.getElementById('outputArea');
     const inputTextarea = document.getElementById('inputArea');
-    const cleanInputButton = document.getElementById('cleanInputButton')
+    const cleanInputButton = document.getElementById('cleanInputButton');
     const errorMessage = document.getElementById('errorMessage');
 
     let leftButtonDown = false;
@@ -234,7 +228,18 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       } else if (button === 2) {
         rightButtonDown = isDown;
       }
-    }
+    };
+
+    clipboard.on('success', e => {
+      console.log('Action: ' + e.action);
+      console.log('Text: ' + e.text);
+      console.log('Trigger: ' + e.trigger);
+    });
+
+    clipboard.on('error ', e => {
+      console.log('Action: ', e.action);
+      console.log('Trigger: ', e.trigger);
+    });
 
     document.addEventListener('mousedown', evt => setButton(evt.button, true));
     document.addEventListener('mouseup', evt => setButton(evt.button, false));
@@ -260,7 +265,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
         x: evt.clientX - canvasRectangle.left,
         y: evt.clientY - canvasRectangle.top
       };
-    }
+    };
 
     const handleMouseAction = (evt, isClick = false)  => {
       const {x: mousex, y: mousey} = getMouseCoordinate(evt);
@@ -278,7 +283,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       } else if (isClick) {
         toggleRectangle(rectx, recty);
       }
-    }
+    };
 
     canvas.addEventListener('mousedown', evt => handleMouseAction(evt, true));
     canvas.addEventListener('mousemove', handleMouseAction);
@@ -286,7 +291,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     const showError = message => {
       errorMessage.innerHTML = 'Error: ' + message;
       errorMessage.style.visibility = 'visible';
-    }
+    };
 
     const hideErrorMessage = () => errorMessage.style.visibility = 'hidden';
 
