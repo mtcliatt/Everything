@@ -68,11 +68,15 @@
 
     <br>
     <button id="getOutputButton">Generate number from plot</button>
+    <button id="copyOutputButton" data-clipboard-target="#outputArea">
+      Copy to clipboard
+    </button>
     <br>
 
     <label for"outputArea">K-Value:
       <textarea readonly id="outputArea" rows="8" cols="62"></textarea>
     </label>
+
 
     <br><br>
     <br><br>
@@ -90,6 +94,7 @@
     <br><br>
   </center>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.12/clipboard.min.js"></script>
   <script src="./biginteger.js"></script>
   <script src="./schemeNumber.js"></script>
   <script src="./app.js"></script>

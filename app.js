@@ -41,6 +41,22 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
   const rectangleHeight = (canvas.height - totalHorizontalLineSize) / numRectanglesHigh;
 
+  const btn = document.getElementById('copyOutputButton');
+
+  // Instantiates clipboard.js so we can copy text
+  const clipboard = new Clipboard(btn);
+
+  clipboard.on('success', e => {
+    console.log('Action: ' + e.action);
+    console.log('Text: ' + e.text);
+    console.log('Trigger: ' + e.trigger);
+  });
+
+  clipboard.on('error ', e => {
+    console.log('Action: ', e.action);
+    console.log('Trigger: ', e.trigger);
+  });
+
   // Draw the grid lines and initializes the array holding the state of the grid
   setupGrid();
 
@@ -101,17 +117,28 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
 
   // Returns the column and row of the rectangle intersected by (x, y)
   function coordinateToRectangle(x, y){
-    let rectangleColumn = Math.ceil(x / (rectangleWidth + gridThickness) - gridThickness / 2);
-    let rectangleRow = (numRectanglesHigh - 1) - Math.ceil(y / (rectangleHeight + gridThickness) - gridThickness / 2);
 
-    rectangleColumn = clampValueBetween(rectangleColumn, 0, numRectanglesWide - 1);
-    rectangleRow = clampValueBetween(rectangleRow, 0, numRectanglesHigh - 1);
+    // The space a single rectangle and border occupies
+    const unitWidth = rectangleWidth + gridThickness;
+    const unitHeight = rectangleHeight + gridThickness;
 
-    //console.log(`c2r found (column, row) = (${rectangleColumn}, ${rectangleRow})`);
+    // We need to take into account the extra border at the top/left sides
+    // of the canvas, before performing the calculation
+    const extraBorder = gridThickness / 2;
+
+    // The grid counts rectangles starting at the bottom, but coordinates start
+    // at the top, so the row needs to be inverted (0 -> max, max -> 0, etc.)
+    const maxRow = numRectanglesHigh - 1;
+
+    let column = Math.ceil(x / unitWidth - extraBorder);
+    let row = maxRow - Math.ceil(y / unitHeight - extraBorder);
+
+    column = clampValueBetween(column, 0, numRectanglesWide - 1);
+    row = clampValueBetween(row, 0, numRectanglesHigh - 1);
 
     return {
-      x: rectangleColumn,
-      y: rectangleRow
+      x: column,
+      y: row
     };
   }
 
@@ -257,7 +284,6 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     canvas.addEventListener('mousemove', handleMouseAction);
 
     const showError = message => {
-      console.log('showing ' + message);
       errorMessage.innerHTML = 'Error: ' + message;
       errorMessage.style.visibility = 'visible';
     }
@@ -277,7 +303,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
         if (digit === '1') {
           const row = i % 17;
           const column = Math.floor(i / 17);
-          activateRectangle(column, row);
+          setRectangleState(column, row, true);
         }
       }
 
