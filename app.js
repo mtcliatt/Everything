@@ -2,13 +2,21 @@
 
 /* TODO:
 
-  - Refactor setupIO
-
   - Add other number functionality stuff
 
   - Add color options
 
+  - Add error message for bad number input
 
+  - Add option to reverse number
+
+  - Make function to go from string to binary number (with argument for reversing)
+
+  - Make it so the plot functions gets the coords and draws, not passes to drawRect
+
+  - Make clipboard success notification
+
+  - Add option to reverse number
 */
 
 // Color and thickness of the grid's lines
@@ -140,25 +148,14 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   }
 
   // Turns on/off the rectangle at the given column and row
-  function setRectangleState(column, row, newState) {
+  function setAndPlotRectangle(column, row, newState) {
     grid[column][row] = newState;
-
-    let color;
-
-    if (newState) {
-      color = rectangleActiveColor;
-    }
-    else {
-      color = rectangleInactiveColor;
-    }
-
-    const {x, y} = rectangleToCoordinate(column, row);
-    drawRectangle(x, y, color);
+    plotRectangle(column, row);
   }
 
-  // Toggles the state of the rectangle at the given column and row
+  // Flips the state of and plots the rect at (column, row)
   function toggleRectangle(column, row) {
-    setRectangleState(column, row, !grid[column][row]);
+    setAndPlotRectangle(column, row, !grid[column][row]);
   }
 
   // Creates the array to hold the "cell's" states and draws the grid's lines
@@ -198,18 +195,50 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     }
   }
 
-  // Calls setRectangleState on every rectangle to set them as inactive
+  // Calls setAndPlotRectangle on every rectangle to set them as inactive
   function clearGrid() {
     for (let i = 0; i < numRectanglesWide; i++) {
       for (let j = 0; j < numRectanglesHigh; j++) {
-        setRectangleState(i, j, false);
+        setAndPlotRectangle(i, j, false);
       }
     }
   }
 
-  // Sets up IO functions like reading a K value from a textarea, clicking to
-  // turn on/off rectangles, etc
+  function plotRectangle(column, row) {
+    const {x, y} = rectangleToCoordinate(column, row);
+    let color = grid[column][row] ? rectangleActiveColor : rectangleInactiveColor;
+
+    drawRectangle(x, y, color);
+  }
+
+  // Plots rectangles based on the states in the grid array
+  function plotGrid() {
+    for (let i = 0; i < grid.length; i++) {
+      for (let j = 0; j < grid[i].length; j++) {
+        plotRectangle(i, j);
+      }
+    }
+  }
+
+  function setGridFromBinary(binaryString) {
+    clearGrid();
+
+    for (let i = 0; i < binaryString.length; i++) {
+      let digit = binaryString.charAt(binaryString.length - i - 1);
+
+      const row = i % 17;
+      const column = Math.floor(i / 17);
+
+      // If the digit is a 1, set the rectangle to true and to false otherwise
+      grid[column][row] = digit === '1';
+    }
+  }
+
+  // Sets up IO functions like reading a K value from the input textarea,
+  // mouse actions to turn on/off rectangles, showing errors, etc.
   function setupIO() {
+
+    // The DOM elements interacted with
     const readInputButton = document.getElementById('readInputButton');
     const getOutputButton = document.getElementById('getOutputButton');
     const outputTextarea = document.getElementById('outputArea');
@@ -217,46 +246,23 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     const cleanInputButton = document.getElementById('cleanInputButton');
     const errorMessage = document.getElementById('errorMessage');
 
-    let leftButtonDown = false;
-    let rightButtonDown = false;
+    // Needed to handle large numbers
+    const sn = SchemeNumber;
 
-    const setButton = (button, isDown) => {
-      if (button === 0) {
-        leftButtonDown = isDown;
-      } else if (button === 2) {
-        rightButtonDown = isDown;
-      }
+    // Shows the error alert with the given message
+    const showError = message => {
+      errorMessage.innerHTML = 'Error: ' + message;
+      errorMessage.style.visibility = 'visible';
     };
 
-    // Instantiates clipboard.js so we can copy text
-    const clipboard = new Clipboard('.btn-clipboard');
+    // Hides the error alert
+    const hideErrorMessage = () => errorMessage.style.visibility = 'hidden';
 
-    clipboard.on('success', e => {
-      console.log('Action: ' + e.action);
-      console.log('Text: ' + e.text);
-      console.log('Trigger: ' + e.trigger);
-    });
+    // Used to clean user's input
+    const cleanString = string => string.replace(/\D+/g, '');
 
-    clipboard.on('error ', e => {
-      console.log('Action: ', e.action);
-      console.log('Trigger: ', e.trigger);
-    });
-
-    document.addEventListener('mousedown', evt => setButton(evt.button, true));
-    document.addEventListener('mouseup', evt => setButton(evt.button, false));
-
-    cleanInputButton.addEventListener('click', () => {
-      let input = inputTextarea.value;
-
-      // Replace any number of whitespace characters with nothing
-      input = input.replace(/\s+/g, '');
-
-      // Replace any number of non-numeric characters with nothing
-      input = input.replace(/\D+/g, '');
-
-      inputTextarea.value = input;
-    });
-
+    // Uses the bounding rectangle of the canvas to determine the location
+    // of the mouse relative to the upper left corner of the canvas
     const getMouseCoordinate = evt => {
       const canvasRectangle = canvas.getBoundingClientRect();
 
@@ -266,6 +272,34 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       };
     };
 
+    // Instantiates clipboard.js so we can copy text
+    const clipboard = new Clipboard('.btn-clipboard');
+
+    // Used to determine if the user is drawing when they move the mouse
+    let leftButtonDown = false;
+    let rightButtonDown = false;
+
+    // If button === 0, sets leftButtonDown to isDown,
+    // else if button === 2 sets rightButton to isDown
+    const setButtonDown = (button, isDown) => {
+      if (button === 0) {
+        leftButtonDown = isDown;
+      } else if (button === 2) {
+        rightButtonDown = isDown;
+      }
+    };
+
+    // When a mouse button is clicked, set the state of that button
+    document.addEventListener('mousedown', evt => setButtonDown(evt.button, true));
+    document.addEventListener('mouseup', evt => setButtonDown(evt.button, false));
+
+    // When the clean input button is pressed, remove any non-numerics from it
+    cleanInputButton.addEventListener('click', () => {
+      inputTextarea.value = cleanString(inputTextarea.value);
+    });
+
+    // When a button is pressed or the mouse moves, determine if any
+    // rectangles should be updated
     const handleMouseAction = (evt, isClick = false)  => {
       const {x: mousex, y: mousey} = getMouseCoordinate(evt);
       const {x: rectx, y: recty} = coordinateToRectangle(mousex, mousey);
@@ -276,9 +310,9 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       }
 
       if (leftButtonDown) {
-        setRectangleState(rectx, recty, true);
+        setAndPlotRectangle(rectx, recty, true);
       } else if (rightButtonDown) {
-        setRectangleState(rectx, recty, false);
+        setAndPlotRectangle(rectx, recty, false);
       } else if (isClick) {
         toggleRectangle(rectx, recty);
       }
@@ -286,32 +320,6 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
 
     canvas.addEventListener('mousedown', evt => handleMouseAction(evt, true));
     canvas.addEventListener('mousemove', handleMouseAction);
-
-    const showError = message => {
-      errorMessage.innerHTML = 'Error: ' + message;
-      errorMessage.style.visibility = 'visible';
-    };
-
-    const hideErrorMessage = () => errorMessage.style.visibility = 'hidden';
-
-    const sn = SchemeNumber;
-    const fn = sn.fn;
-    const ns = fn['number->string'];
-
-    const plotBinary = string => {
-      clearGrid();
-
-      for (let i = 0; i < string.length; i++) {
-        let digit = string.charAt(string.length - i - 1);
-
-        if (digit === '1') {
-          const row = i % 17;
-          const column = Math.floor(i / 17);
-          setRectangleState(column, row, true);
-        }
-      }
-
-    };
 
     getOutputButton.addEventListener('click', () => {
       let plotString = '#b';
@@ -322,31 +330,49 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
         }
       }
 
-      plotString = fn['*'](plotString, sn('17'));
-      outputTextarea.value = ns(plotString);
+      // Multiply result by 17
+      plotString = sn.fn['*'](plotString, sn('17'));
+
+      // Convert to string before plugging in textarea
+      outputTextarea.value = sn.fn['number->string'](plotString);
     });
 
     readInputButton.addEventListener('click', () => {
       hideErrorMessage();
 
-      let inputString = inputTextarea.value;
-      inputString = inputString.replace(/\s+/g, '');
-      inputString = inputString.replace(/\D+/g, '');
+      // Remove any non-numeric characters
+      const inputString = inputTextarea.value.replace(/\D+/g, '');
 
-      let inputNumber = fn['string->number'](inputString);
-      let remainder = fn['mod'](inputNumber, sn('17'));
+      let inputNumber = sn.fn['string->number'](inputString);
 
-      if (!fn['='](remainder, sn('0'))) {
+      if (!inputNumber) {
+        showError('Not a valid number, maybe use the input clean up button?');
+        return;
+      }
+
+      // K must be divisible by 17
+      let remainder = sn.fn['mod'](inputNumber, sn('17'));
+
+      // If K is not divisible by 17 show an error
+      if (!sn.fn['='](remainder, sn('0'))) {
         showError('K is not divisible by 17');
         return;
       }
 
-      inputNumber = fn['/'](inputNumber, sn('17'));
-      let binaryNumber = ns(inputNumber, sn('2'));
+      // Divide the input by 17
+      inputNumber = sn.fn['/'](inputNumber, sn('17'));
 
-      plotBinary(binaryNumber);
+      // Convert the input into binary
+      let binaryNumber = sn.fn['number->string'](inputNumber, sn('2'));
 
+      // Use the new binary number to set the state of each rectangle
+      setGridFromBinary(binaryNumber);
+
+      // Plot the state of each rectangle
+      plotGrid();
     });
-  }
 
+    // To plot the formula that is plugged into the field by default
+    readInputButton.click();
+  }
 })();
