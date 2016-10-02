@@ -2,11 +2,12 @@
 
 /* TODO:
 
-  - Keep documenting stuff. last left off before coordinateToRectangle()
-
-  - Move clipboard stuff to setupIO
+  - Refactor setupIO
 
   - Add other number functionality stuff
+
+  - Add color options
+
 
 */
 
@@ -30,9 +31,6 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   // This array will hold the states of each rectangle
   const grid = [];
 
-  // Instantiates clipboard.js so we can copy text
-  const clipboard = new Clipboard('#copyOutputButton');
-
   // The canvas DOM element and the context to use for drawing
   const canvas = document.getElementById('canvas');
 
@@ -46,8 +44,8 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   const ctx = canvas.getContext('2d');
 
   // The width and height JS will use
-  canvas.width = .9 * window.innerWidth;
-  canvas.height = .3 * window.innerHeight;
+  canvas.width = .75 * window.innerWidth;
+  canvas.height = .4 * window.innerHeight;
 
   // The room for the rectangles is what is left over after the lines are drawn
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
@@ -230,6 +228,9 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       }
     };
 
+    // Instantiates clipboard.js so we can copy text
+    const clipboard = new Clipboard('.btn-clipboard');
+
     clipboard.on('success', e => {
       console.log('Action: ' + e.action);
       console.log('Text: ' + e.text);
@@ -253,8 +254,6 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
       // Replace any number of non-numeric characters with nothing
       input = input.replace(/\D+/g, '');
 
-      // Insert a newline character after every 64th character
-      input = input.replace(/(.{64})/g, '$1\n');
       inputTextarea.value = input;
     });
 

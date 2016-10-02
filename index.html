@@ -3,96 +3,113 @@
 <head>
   <meta charset="utf-8"/>
 
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- jQuery for Bootstrap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
   <style>
     body {
       background-color: black;
     }
 
-    #canvas {
-      position: relative;
-      top: 100px;
-      left: 50px;
-      background-color: grey;
+    textarea {
+      resize: vertical;
     }
 
-    #title {
-      font-family: "Lucida Console", Monaco, monospace;
-      font-size: 48px;
-      color: white;
-      margin-bottom: -50px;
-    }
-
-    #infoText {
-      font-family: "Lucida Console", Monaco, monospace;
-      font-size: 16px;
+    .text {
       color: white;
     }
 
-    #errorMessage {
-      font-family: "Lucida Console", Monaco, monospace;
-      font-size: 16px;
+    .error {
       color: red;
-      visibility: hidden;
-    }
-
-    label {
-      font-family: "Lucida Console", Monaco, monospace;
-      font-size: 32px;
-      color: white;
-    }
-
-    label textarea {
-      vertical-align: middle;
+      font-size: 2em;
     }
   </style>
 
 </head>
 <body>
 
-  <center>
-    <p id="title">Tupper's Self-Referential Formula [<a href="https://en.wikipedia.org/wiki/Tupper%27s_self-referential_formula">wiki</a>]</p>
-  </center>
+  <div class="container-full">
 
-  <canvas id="canvas"></canvas>
-
-  <br><br>
-  <br><br>
-  <br><br>
-  <br><br>
-
-  <center>
-
-    <p id="infoText">&#8226;  Click a square to toggle it on and off</p>
-
-    <p id="infoText">&#8226;  Hold down the left/right mouse buttons to turn on/off multiple squares</p>
+    <div class="row">
+      <div class="col-lg-6 col-lg-offset-4">
+        <h1 class="text">Tupper's Self-Referential Formula [<a href="https://en.wikipedia.org/wiki/Tupper%27s_self-referential_formula">wiki</a>]</h1>
+      </div>
+    </div>
 
     <br>
-    <button id="getOutputButton">Generate number from plot</button>
-    <button id="copyOutputButton" data-clipboard-target="#outputArea">
-      Copy to clipboard
-    </button>
-    <br>
 
-    <label for"outputArea">K-Value:
-      <textarea readonly id="outputArea" rows="8" cols="62"></textarea>
-    </label>
-
+    <div class="row">
+      <div class="col-lg-9 col-lg-offset-1">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
 
     <br><br>
-    <br><br>
 
-    <button id="readInputButton">Generate plot from number</button>
-    <button id="cleanInputButton">Clean up input</button>
-    <br>
 
-    <label for"inputArea">K-Value:
-      <textarea id="inputArea" rows="8" cols="64"></textarea>
-    </label>
-    <br>
+    <div class="row">
+      <div class="col-lg-6">
 
-    <p id="errorMessage">Error:</p>
-    <br><br>
-  </center>
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2">
+            <div class="btn-group" role="group">
+
+              <button id="getOutputButton" type="button" class="btn btn-success">Generate K value from graph</button>
+
+              <button id="copyOutputButton" data-clipboard-target="#outputArea" class="btn btn-default btn-clipboard" aria-label="Copy K value from plot">
+                <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2">
+            <textarea readonly rows="8" class="form-control" id="outputArea"></textarea>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-lg-6">
+
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-0">
+            <div class="btn-group" role="group">
+
+              <button id="readInputButton" type="button" class="btn btn-success">Plot graph from K value</button>
+              <button id="cleanInputButton" type="button" class="btn btn-info">Clean input</button>
+
+              <button data-clipboard-target="#inputArea" class="btn btn-default btn-clipboard" aria-label="Copy K value">
+                <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-0">
+            <textarea rows="8" class="form-control" id="inputArea"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4 col-lg-offset-6">
+        <p id="errorMessage" class="error"></p>
+      </div>
+    </div>
+
+  </div>
+
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.12/clipboard.min.js"></script>
   <script src="./biginteger.js"></script>
