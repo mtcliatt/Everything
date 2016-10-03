@@ -28,6 +28,10 @@
     #errorMessage {
       visibility: hidden;
     }
+
+    .border {
+      border: solid 1px red;
+    }
   </style>
 
 </head>
@@ -35,22 +39,39 @@
 
   <div class="container-full">
 
+
     <div class="row">
-      <div class="col-lg-6 col-lg-offset-4">
+      <div class="col-lg-8 col-lg-offset-4">
         <h1 class="text">Tupper's Self-Referential Formula [<a href="https://en.wikipedia.org/wiki/Tupper%27s_self-referential_formula">wiki</a>]</h1>
-      </div>
-    </div>
-
-    <br>
-
-    <div class="row">
-      <div class="col-lg-9 col-lg-offset-1">
-        <canvas id="canvas"></canvas>
       </div>
     </div>
 
     <br><br>
 
+    <div class="row">
+      <div class="col-lg-1 col-lg-offset-1">
+        <span class="label label-primary">Rectangle Color</span>
+        <br><br>
+
+        <button id="colorButton" type="button" class="btn btn-success btn-lg">&nbsp;</button>
+        <button type="button" class="btn btn-success btn-lg">&nbsp;</button>
+        <br>
+
+        <button type="button" class="btn btn-danger btn-lg">&nbsp;</button>
+        <button type="button" class="btn btn-danger btn-lg">&nbsp;</button>
+        <br>
+
+        <button type="button" class="btn btn-info btn-lg">&nbsp;</button>
+        <button type="button" class="btn btn-info btn-lg">&nbsp;</button>
+        <br>
+
+      </div>
+      <div class="col-lg-8">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+
+    <br><br><br>
 
     <div class="row">
       <div class="col-lg-6">
@@ -59,9 +80,9 @@
           <div class="col-lg-8 col-lg-offset-2">
             <div class="btn-group" role="group">
 
-              <button id="getOutputButton" type="button" class="btn btn-success">Generate K value from graph</button>
+              <button id="getOutputButton" type="button" class="btn btn-lg btn-success">Generate K value from graph</button>
 
-              <button id="copyOutputButton" data-clipboard-target="#outputArea" class="btn btn-default btn-clipboard" aria-label="Copy K value from plot">
+              <button id="copyOutputButton" data-clipboard-target="#outputArea" class="btn btn-lg btn-default btn-clipboard" aria-label="Copy K value">
                 <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
               </button>
 
@@ -70,7 +91,7 @@
         </div>
 
         <div class="row">
-          <div class="col-lg-8 col-lg-offset-2">
+          <div class="col-lg-10 col-lg-offset-2">
             <textarea readonly rows="8" class="form-control" id="outputArea"></textarea>
           </div>
         </div>
@@ -79,13 +100,13 @@
       <div class="col-lg-6">
 
         <div class="row">
-          <div class="col-lg-8 col-lg-offset-0">
+          <div class="col-lg-12">
             <div class="btn-group" role="group">
 
-              <button id="readInputButton" type="button" class="btn btn-success">Plot graph from K value</button>
-              <button id="cleanInputButton" type="button" class="btn btn-info">Clean input</button>
+              <button id="readInputButton" type="button" class="btn btn-lg btn-success">Plot graph from K value</button>
+              <button id="cleanInputButton" type="button" class="btn btn-lg btn-info">Clean input</button>
 
-              <button data-clipboard-target="#inputArea" class="btn btn-default btn-clipboard" aria-label="Copy K value">
+              <button data-clipboard-target="#inputArea" class="btn btn-lg btn-default btn-clipboard" aria-label="Copy K value">
                 <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
               </button>
 
@@ -94,11 +115,13 @@
         </div>
 
         <div class="row">
-          <div class="col-lg-8 col-lg-offset-0">
+          <div class="col-lg-10">
             <textarea rows="8" class="form-control" id="inputArea" autocomplete="off">4858450636189713423582095962494202044581400587983244549483093085061934704708809928450644769865524364849997247024915119110411605739177407856919754326571855442057210445735883681829823754139634338225199452191651284348332905131193199953502413758765239264874613394906870130562295813219481113685339535565290850023875092856892694555974281546386510730049106723058933586052544096664351265349363643957125565695936815184334857605266940161251266951421550539554519153785457525756590740540157929001765967965480064427829131488548259914721248506352686630476300</textarea>
           </div>
         </div>
+
       </div>
+
     </div>
 
     <div class="row">

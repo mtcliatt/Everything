@@ -17,14 +17,16 @@
   - Make clipboard success notification
 
   - Add option to reverse number
+
+  - Finish color functionality
 */
 
 // Color and thickness of the grid's lines
 const gridColor = 'grey';
 const gridThickness = 2;
 
-const rectangleActiveColor = 'blue';
-const rectangleInactiveColor = 'black';
+let rectangleActiveColor = 'blue';
+let rectangleInactiveColor = 'black';
 
 // The number of rectangles in the grid
 const numRectanglesWide = 106;
@@ -51,9 +53,10 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   // The canvas's context used for drawing
   const ctx = canvas.getContext('2d');
 
-  // The width and height JS will use
-  canvas.width = .75 * window.innerWidth;
-  canvas.height = .4 * window.innerHeight;
+  // Let the canvas fill the width of the column,
+	// but set the height so it's not too tall
+	canvas.width = canvas.parentElement.offsetWidth;
+	canvas.height = .4 * window.innerHeight;
 
   // The room for the rectangles is what is left over after the lines are drawn
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
@@ -245,6 +248,12 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     const inputTextarea = document.getElementById('inputArea');
     const cleanInputButton = document.getElementById('cleanInputButton');
     const errorMessage = document.getElementById('errorMessage');
+
+		const colorButton = document.getElementById('colorButton');
+		colorButton.onclick = () => {
+			rectangleActiveColor = 'red';
+			plotGrid();
+		}
 
     // Needed to handle large numbers
     const sn = SchemeNumber;
