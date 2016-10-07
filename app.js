@@ -2,30 +2,17 @@
 
 /* TODO:
 
-  - Add other number functionality stuff
-
-  - Add color options
-
-  - Add error message for bad number input
-
   - Add option to reverse number
-
-  - Make function to go from string to binary number (with argument for reversing)
-
-  - Make it so the plot functions gets the coords and draws, not passes to drawRect
 
   - Make clipboard success notification
 
-  - Add option to reverse number
-
-  - Finish color functionality
 */
 
 // Color and thickness of the grid's lines
 const gridColor = 'grey';
 const gridThickness = 2;
 
-let rectangleActiveColor = 'blue';
+let rectangleActiveColor = 'white';
 let rectangleInactiveColor = 'black';
 
 // The number of rectangles in the grid
@@ -248,12 +235,6 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
     const inputTextarea = document.getElementById('inputArea');
     const cleanInputButton = document.getElementById('cleanInputButton');
     const errorMessage = document.getElementById('errorMessage');
-
-		const colorButton = document.getElementById('colorButton');
-		colorButton.onclick = () => {
-			rectangleActiveColor = 'red';
-			plotGrid();
-		}
 
     // Needed to handle large numbers
     const sn = SchemeNumber;
