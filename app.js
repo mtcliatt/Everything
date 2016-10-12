@@ -43,7 +43,7 @@ const totalHorizontalLineSize = numRectanglesHigh * gridThickness;
   // Let the canvas fill the width of the column,
 	// but set the height so it's not too tall
 	canvas.width = canvas.parentElement.offsetWidth;
-	canvas.height = .4 * window.innerHeight;
+	canvas.height = .3 * window.innerHeight;
 
   // The room for the rectangles is what is left over after the lines are drawn
   const rectangleWidth = (canvas.width - totalVerticalLineSize) / numRectanglesWide;
