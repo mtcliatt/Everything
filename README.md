@@ -32,7 +32,7 @@
 ### Note
 
 **This version does not reverse the axes like the Wikipedia version does.**  
-**This version follows the method used in the [Numberphile video](https://www.youtube.com/watch?v=_s5RFgd59ao) and on [www.tuppers-formula.tk](http://tuppers-formula.tk/).
+**This version follows the method used in the [Numberphile video](https://www.youtube.com/watch?v=_s5RFgd59ao) and on [www.tuppers-formula.tk](http://tuppers-formula.tk/).**
   
   
 -------------------
