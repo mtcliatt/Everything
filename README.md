@@ -15,7 +15,9 @@
 
 # Using this application
 
-### Run the application by opening `index.html` in a browser.
+## Use the [live demo](https://programmersparadise.000webhostapp.com/)
+
+### Or, run the application by cloning the repo and opening `index.html` in a browser.
 
 ### Controls
 
