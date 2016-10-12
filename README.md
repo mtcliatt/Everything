@@ -1,9 +1,13 @@
 # Plot & find K values using Tupper's Self-Referential Formula
 
+## [Live demo](https://mtcliatt.github.io/Everything/)
+
 <p align="center">
 <img src="SCREENSHOTS/main.png">
 <div align="center"><i>The plot & K-value where Tupper's formula plots itself</i></div>
 </p>
+
+## [Live demo](https://mtcliatt.github.io/Everything/)
 
 -------------------
 
@@ -15,7 +19,7 @@
 
 # Using this application
 
-## Use the [live demo](https://programmersparadise.000webhostapp.com/)
+## [Live demo](https://mtcliatt.github.io/Everything/)
 
 ### Or, run the application by cloning the repo and opening `index.html` in a browser.
 
