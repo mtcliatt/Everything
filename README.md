@@ -1,6 +1,6 @@
 # Plot & find K values using Tupper's Self-Referential Formula
 
-## [Live demo](https://mtcliatt.github.io/Everything/)
+## [Try it out!](https://mtcliatt.github.io/Everything/)
 
 <p align="center">
 <img src="SCREENSHOTS/main.png">
